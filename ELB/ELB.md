@@ -1,0 +1,1 @@
+#ELB (Elastic Load Balancer) 이란
