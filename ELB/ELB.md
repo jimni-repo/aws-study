@@ -9,6 +9,58 @@
 - 동일한 클라이언트에게 동일한 대상으로 라우팅하는 고정 세션(Sticky Session) 지원
 - 사용자와 인스턴스가 암호화 통신을 해야하는 경우 인스턴스의 붇담을 줄이기 위해 ELB 가 대신 암호화 통신을 수행(SSL Offload)
 
+## 가용 영역 및 로드 밸런서 노드
+로드 밸런서에서 가용 영역을 활성화 하면 ELB 가 해당 가용 영역에 로드 밸런서 노드를 생성합니다. 등록된 모든 가용 영역의 로드 밸런서가 트래픽을 수신하는 것이 아니라 활성화 된 가용 영역의 로드 밸런서만 라우팅됩니다.
+
+### Cross-Zone Load Balancing - 교차 영역 로드 밸런싱
+교차 영역 로드 밸런싱을 활성화 하면 각 로드 밸런서 노드가 활성화된 모든 가용 영역에 있는 대상에게 트래픽을 분산합니다. Application Load Balancer 는 기본적으로 이 기능이 항상 사용되지만 Network Load Balancer 는 비활성화 됩니다. 또한 이 기능은 생성 후 활성화 하거나 비활성화 할 수 있습니다.
+
+- 교차 영역 로드 밸런싱이 활성화된 경우
+
+    ![elb-cross-zone-enabled](images/cross_zone_load_balancing_enabled.png)
+
+- 교차 영역 로드 밸런싱이 비활성화된 경우
+
+    ![cross_zone_load_balancing_disabled](images/cross_zone_load_balancing_disabled.png)
+
+### 영역 전환
+영역 전환은 Amazon Application Recovery Controller(ARC) 내의 기능입니다. 이 기능으로 손상된 가용 영역에서 로드 밸런서 리소스를 다른 곳으로 이동할 수 있습니다. 이 기능을 통해 AWS 리전의 다른 정상 가용 영역에서 계속 운영하도록 구성 가능합니다.
+
+## 라우팅 요청
+클라이언트는 로드 밸런서에 요청을 보내기 전에 먼저 DNS 로 부터 로드 밸런서 노드의 IP 를 반환 받습니다. Network Load Balancer 를 생성할 때 필요에 따라 Elastic IP 주소 하나를 네트워크 인터페이스에 연결할 수 있습니다.
+
+### 라우팅 알고리즘
+
+#### Application Load Balancer
+먼저 적용할 규칙을 결정하기 위해 우선순위에 따라 리스터 규칙을 평가합니다. 그리고 설정된 규칙에 따라 대상 그룹을 선택합니다. 기본 라우팅은 라운드 로빈입니다.
+
+#### Network Load Balancer
+흐름 해쉬 알고리즘을 사용하여 기본 규칙에 대한 대상 그룹을 선택합니다. 알고리즘은 다음을 기반으로 동작합니다.
+
+- 프로토콜
+- 소스 IP 주소 및 소스 포트
+- 대상 IP 주소 및 대상 포트
+- TCP 시퀀스 번호
+
+각 개별 TCP 연결은 수명 동안 하나의 대상에 라우팅됩니다. 클라이언트로부터의 TCP 연결은 소스 포트와 시퀀스가 다르므로 다르게 인식됩니다.
+
+### HTTP 연결
+Application Load Balancer 는 연결 멀티플랙싱을 사용합니다. 여러 프런트 엔드 연결에 있는 여러 요청을 단일 백엔드 연결을 통해 라우팅될 수 있습니다. 이 기능을 사용하지 않으려면 HTTP 응답에 `HTTP Connection: close` 헤더를 설정하여 keep-alive 를 비활성화 할 수 있습니다.
+
+Application Load Balancer 는 프런트 엔드 연결에서 파이프라인 HTTP 를 지원합니다. 단, 백엔드 연결에서는 지원하지 않습니다.
+
+Application Load Balancer 는 `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `PATCH` 요청 메서드를 지원합니다.
+
+Application Load Balancer 는 프런트 엔드 연결에서 HTTP/0.9, HTTP/1.0, HTTP/1.1, HTTP/2 등의 프로토콜을 지원합니다. HTTPS 리스너에서만 HTTP/2 를 사용할수 있고 하나의 HTTP/2 연결을 통해 최대 128개의 요청을 동시에 전송할 수있습니다. 또한 HTTP에서 WebSocket 으로 연결을 업그레이드 할 수도 있습니다. 단, 이 경우 리스너 및 AWS WAF 통합은 더 이상 적용되지 않습니다. 백엔드 연결에서는 기본적으로 HTTP/1.1 을 사용하며, HTTP/2 또는 gRPC 를 사용해 요청을 보낼 수도 있습니다.
+
+## 로드 밸런서 체계
+로드 밸런서를 생성할 때 밸런서를 내부 또는 인터넷 경계 로드 밸런서로 생성할지 여부를 선택할 수 있습니다.
+
+![lb-scheme](images/lb-scheme.png)
+
+## 로드 밸런서에 대한 네트워크 MTU
+
+
 ## 제품 비교
 
 ![elb-choice](images/elb-choice.png)
