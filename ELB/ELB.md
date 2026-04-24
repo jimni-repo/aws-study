@@ -66,7 +66,7 @@
  
 각 개별 TCP 연결은 수명 동안 하나의 대상에 라우팅됩니다. 클라이언트로부터의 TCP 연결은 소스 포트와 시퀀스가 다르므로 다르게 인식됩니다.
 
-#### Gatewat Load Balancer
+#### Gateway Load Balancer
 Network Load Balancer 와 비슷하게 흐름 해쉬 알고리즘을 사용하여 대상 어플라이언스를 선택합니다. 로드 밸런서와 대상 보안 어플라이언스는 포트 6081에서 GENEVE 프로토콜을 사용하여 트래픽을 교환합니다. GENEVE 프로토콜은 이 로드 밸런서의 핵심 구동 원리 입니다. 
 
 > [!NOTE]
@@ -124,7 +124,7 @@ Application Load Balancer 는 프런트 엔드 연결에서 HTTP/0.9, HTTP/1.0, 
 
 | 기능           | Application Load Balancer |        Network Load Balancer        |  Gateway Load Balancer   |
 |--------------|:-------------------------:|:-----------------------------------:|:------------------------:|
-| 로드 밸런서 유형    |           계층 7            |                계층 7                 | 계층 3 게이트웨이 + 계층 4 로드 밸런싱 |
+| 로드 밸런서 유형    |           계층 7            |                계층 4                 | 계층 3 게이트웨이 + 계층 4 로드 밸런싱 |
 | 대상 유형        |     IP, 인스턴스, Lambda      | IP, 인스턴스, Application Load Balancer |         IP, 인스턴스         |
 | 흐름/프록시 동작 종료 |             예             |                  예                  |           아니요            |
 | 프로토콜 리스너     |     HTTP, HTTPS, gRPC     |            TCP, UDP, TLS            |            IP            |
